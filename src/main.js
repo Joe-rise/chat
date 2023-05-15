@@ -1,4 +1,8 @@
 import { createApp } from 'vue'
 import App from './App.vue'
-
-createApp(App).mount('#app')
+import * as ELIcons from '@element-plus/icons-vue'
+const app = createApp(App)
+for (let iconName in ELIcons) {
+	app.component(iconName, ELIcons[iconName])
+}
+app.mount('#app')

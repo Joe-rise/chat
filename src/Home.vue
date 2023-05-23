@@ -17,15 +17,20 @@
           <div v-html="message.content"></div>
         </div>
 
+        <div class="toolbox">
+          <el-button :icon="DocumentCopy" circle @click="documentCopyHandle(message.content)"></el-button>
+          <el-button :icon="Delete" circle></el-button>
+        </div>
+
       </div>
-      
+
     </div>
 
     <div class="input-container" style="display: flex; align-items: center;">
       <el-input class="input" size="large" style="flex: 1" v-model="question" placeholder="请输入您的问题..."
         @keydown.enter.native="ask">
         <template #suffix>
-          <el-button :icon="Promotion" style="border: none" @click="ask" :disabled="question.trim() === ''"></el-button>
+          <el-button :icon="Promotion" style="border: none" @click="ask"></el-button>
         </template>
       </el-input>
 
@@ -42,7 +47,10 @@
 
 <script setup>
   import { ref, watch, reactive, onMounted, nextTick } from 'vue'
-  import { Delete, Promotion } from '@element-plus/icons-vue'
+  import { Delete, Promotion,DocumentCopy } from '@element-plus/icons-vue'
+  import { ElMessage } from 'element-plus';
+  import 'element-plus/theme-chalk/el-message.css';
+  import 'element-plus/theme-chalk/el-notification.css';
   const chatWindow = ref()
   const question = ref('')
 
@@ -127,6 +135,11 @@
 
 
   function ask() {
+    if (question.value.trim().length === 0) {
+      ElMessage.warning("发送消息不能为空")
+      return
+    }
+
     const chatBubbleMe = { role: 'user', content: question.value }
     addMessage(chatBubbleMe)
     localStorage.setItem('messages', JSON.stringify(state.messages))
@@ -191,5 +204,14 @@
     background-color: #4bc766;
     color: #fff;
     align-self: flex-end;
+  }
+
+  .chat-item:hover .toolbox{
+    opacity: 1;
+  }
+
+  .toolbox {
+    display: flex;
+    opacity: 0;
   }
 </style>

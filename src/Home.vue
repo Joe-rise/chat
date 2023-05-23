@@ -1,7 +1,8 @@
 <template>
   <div class="container">
     <div style="font-size: large;margin-left: 10px;">Hello，有什么问题随便问哦😊</div>
-    <div class="chat-window" ref="chatWindow">
+    <div class="chat-window" ref="chatWindow" id="chatroom">
+
       <div class="chat-item" v-for="(message, index) in state.messages" :key="index"
         :class="{'user': message.role === 'user'}">
 
@@ -17,14 +18,17 @@
         </div>
 
       </div>
+      
     </div>
 
     <div class="input-container" style="display: flex; align-items: center;">
-      <el-input type="textarea" size="large" style="flex: 1" :autosize="{ minRows: 2, maxRows: 6 }" v-model="question"
-        placeholder="请输入您的问题..." @keydown.enter.native="ask"></el-input>
+      <el-input class="input" size="large" style="flex: 1" v-model="question" placeholder="请输入您的问题..."
+        @keydown.enter.native="ask">
+        <template #suffix>
+          <el-button :icon="Promotion" style="border: none" @click="ask" :disabled="question.trim() === ''"></el-button>
+        </template>
+      </el-input>
 
-      <el-button circle :icon="Promotion" style="margin-left:10px" type="primary" @click="ask"
-        :disabled="question.trim() === ''"></el-button>
 
       <el-popconfirm title="是否清空历史聊天内容?" :hide-icon="true" :hide-after="0" @confirm="clearMessages">
         <template #reference>
@@ -37,19 +41,20 @@
 </template>
 
 <script setup>
-  import { ref, watch,reactive, onMounted,nextTick } from 'vue'
+  import { ref, watch, reactive, onMounted, nextTick } from 'vue'
   import { Delete, Promotion } from '@element-plus/icons-vue'
-  const chatWindow = ref(null)
+  const chatWindow = ref()
   const question = ref('')
 
   const state = reactive({
     messages: [],
   })
 
- 
   function scrollToBottom() {
-    const chatWindowEl = chatWindow.value
-    chatWindowEl.scrollTop = chatWindowEl.scrollHeight
+    nextTick(() => {
+      const chatWindowEl = chatWindow.value
+      chatWindowEl.scrollTop = chatWindowEl.scrollHeight
+    })
   }
 
   onMounted(() => {
@@ -63,7 +68,7 @@
     }
     scrollToBottom()
   })
- 
+
 
   const avatarSize = 35
   const userAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'
@@ -80,10 +85,10 @@
     saveQuestion()
   })
 
-  watch(state.messages, () => {
-    nextTick(() => {
-      scrollToBottom()
-    })
+  watch(() => state.messages, () => {
+    scrollToBottom()
+  }, {
+    deep: true//深度监听
   })
 
   function clearMessages() {
@@ -93,31 +98,31 @@
 
 
   async function fetchChatGPT(msg) {
-  const url = 'http://180.184.92.218:60088/chat5'
-  try {
-    const response = await fetch(url, {
-      method: 'POST',
-      body:JSON.stringify(msg),
-      headers: {
-        'Content-Type': 'application/json'
-      },
-    });
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-    let done = false;
-    while (!done) {
-      const { value, done: readerDone } = await reader.read();
-      if(!readerDone){
-        state.messages[state.messages.length - 1].content += decoder.decode(value)
-      }else{
-        localStorage.setItem('messages', JSON.stringify(state.messages))
+    const url = 'http://180.184.92.218:60088/chat5'
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        body: JSON.stringify(msg),
+        headers: {
+          'Content-Type': 'application/json'
+        },
+      });
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let done = false;
+      while (!done) {
+        const { value, done: readerDone } = await reader.read();
+        if (!readerDone) {
+          state.messages[state.messages.length - 1].content += decoder.decode(value)
+        } else {
+          localStorage.setItem('messages', JSON.stringify(state.messages))
+        }
+        done = readerDone
       }
-      done = readerDone
+    } catch (error) {
+      console.error(error);
     }
-  } catch (error) {
-    console.error(error);
   }
-}
 
 
 
@@ -134,6 +139,10 @@
 </script>
 
 <style>
+  .el-input--large .el-input__wrapper {
+    padding-right: 1px;
+  }
+
   .user {
     flex-direction: row-reverse;
   }

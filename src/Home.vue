@@ -1,31 +1,42 @@
 <template>
   <div class="container">
-    <div style="font-size: large;margin-left: 10px;">Hello，有什么问题随便问哦😊</div>
     <div class="chat-window" ref="chatWindow" id="chatroom">
+      <div style="font-size: large;margin-left: 10px;">Hello，有什么问题随便问哦😊</div>
+      <div class="chat-item" v-for="(message, index) in state.messages" :key="index">
 
-      <div class="chat-item" v-for="(message, index) in state.messages" :key="index"
-        :class="{ 'user': message.role === 'user' }">
-
-        <div class="avatar" v-if="message.role === 'assistant'">
-          <el-avatar :size="avatarSize" :src="robotAvatar" />
-        </div>
-        <div class="avatar" v-if="message.role === 'user'">
-          <el-avatar :size="avatarSize" :src="userAvatar" />
-        </div>
-        <div class="chat-bubble" :class="{ 'me': message.role === 'user' }">
-          <div v-html="message.content"></div>
+        <div class="toolbox" style="padding:0px 45px 2px;" :class="{ 'user-box': message.role === 'user' }">
+          <el-button-group>
+            <el-button :icon="DocumentCopy" type="primary" plain :style="{ padding: '15px' }"
+              @click="copyToClip(message.content)" />
+            <el-button :icon="Edit" type="primary" @click="editMessage(message.content)" plain
+              :style="{ padding: '15px' }" />
+            <el-button :icon="Delete" type="primary" plain :style="{ padding: '15px' }" @click="deleteMessage(index)" />
+          </el-button-group>
         </div>
 
-        <div class="toolbox">
-          <el-button :icon="DocumentCopy" circle @click="copyToClip(message.content)"></el-button>
-          <el-button :icon="Delete" circle @click="deleteMessage(index)"></el-button>
+        <div class="chat-message" :class="{ 'user': message.role === 'user' }">
+          <div class="avatar" v-if="message.role === 'assistant'">
+            <el-avatar :size="avatarSize" :src="robotAvatar" />
+          </div>
+          <div class="avatar" v-if="message.role === 'user'">
+            <el-avatar :size="avatarSize" :src="userAvatar" />
+          </div>
+          <div class="chat-bubble" :class="{ 'user-bubble': message.role === 'user' }">
+            <div v-html="message.content"></div>
+          </div>
         </div>
+
 
       </div>
-
     </div>
-
-    <div class="input-container" style="display: flex; align-items: center;">
+    <div style="display: flex; align-items: center;justify-content:flex-end;margin-bottom: 5px;margin-right: 5px;">
+      <el-popconfirm title=" 是否清空历史聊天内容?" :hide-icon="true" :hide-after="0" @confirm="clearMessages">
+        <template #reference>
+          <el-button circle :icon="Delete" type="warning" style="margin-left:8px"></el-button>
+        </template>
+      </el-popconfirm>
+    </div>
+    <div class="input-container" style="display: flex; align-items: center;margin-bottom: 3vh;">
       <el-input class="input" size="large" style="flex: 1" v-model="question" placeholder="请输入您的问题..."
         @keydown.enter.native="ask">
         <template #suffix>
@@ -34,11 +45,6 @@
       </el-input>
 
 
-      <el-popconfirm title="是否清空历史聊天内容?" :hide-icon="true" :hide-after="0" @confirm="clearMessages">
-        <template #reference>
-          <el-button circle :icon="Delete" type="warning" style="margin-left:8px"></el-button>
-        </template>
-      </el-popconfirm>
 
     </div>
   </div>
@@ -46,7 +52,7 @@
 
 <script setup>
 import { ref, watch, reactive, onMounted, nextTick } from 'vue'
-import { Delete, Promotion, DocumentCopy } from '@element-plus/icons-vue'
+import { Delete, Promotion, DocumentCopy, Edit } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus';
 import 'element-plus/theme-chalk/el-message.css';
 import 'element-plus/theme-chalk/el-notification.css';
@@ -57,7 +63,9 @@ const state = reactive({
   messages: [],
 })
 
-
+function editMessage(val) {
+  question.value = val
+}
 function copyToClip(content) {
   var aux = document.createElement("input");
   aux.setAttribute("value", content);
@@ -174,15 +182,14 @@ function ask() {
 }
 
 .container {
+  overflow: hidden;
   max-width: 600px;
   margin: 0 auto;
   background-color: #ededed;
-  border-radius: 10px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
   padding: 3px 10px 10px 10px;
   display: flex;
   flex-direction: column;
-  height: 97vh;
+  height: 100vh;
 }
 
 .chat-window {
@@ -190,17 +197,13 @@ function ask() {
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  margin-bottom: 20px;
+  margin-bottom: 2px;
 }
 
-.chat-item {
+.chat-message {
   display: flex;
   align-items: flex-start;
   margin-bottom: 10px;
-}
-
-.chat-item .user {
-  justify-content: flex-end;
 }
 
 
@@ -213,7 +216,7 @@ function ask() {
   margin-right: 10px;
 }
 
-.chat-bubble.me {
+.chat-bubble.user-bubble {
   background-color: #4bc766;
   color: #fff;
   align-self: flex-end;
@@ -226,5 +229,9 @@ function ask() {
 .toolbox {
   display: flex;
   opacity: 0;
+}
+
+.toolbox.user-box {
+  justify-content: flex-end;
 }
 </style>

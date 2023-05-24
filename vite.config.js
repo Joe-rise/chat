@@ -6,14 +6,15 @@ import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
 
 export default defineConfig({
 
-  server: {				
-    host: '0.0.0.0'	
-  }	,
+  server: {
+    host: '0.0.0.0',
+    port: 5700
+  },
 
   plugins: [vue(), AutoImport({
     resolvers: [ElementPlusResolver({ importStyle: true })],
   }),
-    Components({
-      resolvers: [ElementPlusResolver({ importStyle: true })],
-    }),],
+  Components({
+    resolvers: [ElementPlusResolver({ importStyle: true })],
+  }),],
 })
